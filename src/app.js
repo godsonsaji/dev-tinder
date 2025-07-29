@@ -85,3 +85,6 @@ connectDB()
   .catch((err) => {
     console.error("Failed to connect DB");
   });
+
+console.log("Hello");
+console.log("Hello World");
