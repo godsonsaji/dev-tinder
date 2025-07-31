@@ -2,6 +2,7 @@ const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const { validateEditData } = require("../utils/validate");
+const bcrypt = require("bcrypt");
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
@@ -28,6 +29,25 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     });
   } catch (error) {
     res.status(400).send(error.message);
+  }
+});
+
+profileRouter.patch("/profile/edit/password", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { oldPassword, newPassword } = req.body;
+    const isPasswordValid = await loggedInUser.validatePassword(oldPassword);
+    if (!isPasswordValid) {
+      throw new Error("Invalid credentials");
+    }
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    loggedInUser.password = newHashedPassword;
+    await loggedInUser.save();
+    res.json({
+      message: `${loggedInUser.firstName}, your password edited successfully!`,
+    });
+  } catch (err) {
+    res.status(400).send(err.message);
   }
 });
 
